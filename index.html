@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Проєкт закладання промислового саду — Калькулятор</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600&family=Geologica:wght@300;400;500;600&display=swap');
+  :root {
+    --gd:#1a3a1f;--gm:#2d6a35;--gl:#4a9a55;--gp:#c8e6c9;--gf:#f0f7f0;
+    --gold:#c8a846;--goldl:#f5e8b0;--txt:#1a2a1a;--txm:#3a5a3a;--txs:#6a8a6a;
+    --brd:#b8d4b8;--bg:#f8fcf8;--wh:#ffffff;--red:#c0392b;--org:#e67e22;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Geologica',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;}
+  .header{background:var(--gd);padding:24px 32px 20px;position:relative;overflow:hidden;}
+  .header::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:rgba(74,154,85,.15);}
+  .header-inner{max-width:1000px;margin:0 auto;position:relative;z-index:1;}
+  .header-tag{display:inline-block;background:rgba(200,168,70,.25);color:var(--gold);font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:2px;margin-bottom:10px;}
+  .header h1{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:600;color:#e8f5e9;line-height:1.3;margin-bottom:4px;}
+  .header p{font-size:12px;color:rgba(200,230,200,.7);font-weight:300;}
+  .progress-bar{background:rgba(255,255,255,.1);height:3px;margin-top:16px;border-radius:2px;overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--gl),var(--gold));border-radius:2px;transition:width .5s;width:9%;}
+  .main{max-width:1000px;margin:0 auto;padding:24px 16px 60px;}
+  .steps-nav{display:flex;gap:5px;margin-bottom:22px;flex-wrap:wrap;}
+  .step-btn{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;border:1px solid var(--brd);background:var(--wh);font-family:'Geologica',sans-serif;font-size:11.5px;color:var(--txs);cursor:pointer;transition:all .2s;}
+  .step-btn:hover{border-color:var(--gl);color:var(--gm);}
+  .step-btn.active{background:var(--gd);border-color:var(--gd);color:white;}
+  .step-btn.done{background:var(--gf);border-color:var(--gp);color:var(--gm);}
+  .step-num{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;background:rgba(0,0,0,.08);font-size:10px;font-weight:600;flex-shrink:0;}
+  .step-btn.active .step-num{background:rgba(255,255,255,.2);}
+  .section-card{background:var(--wh);border:1px solid var(--brd);border-radius:12px;padding:24px 28px;margin-bottom:18px;}
+  .section-card.hidden{display:none;}
+  .section-title{font-family:'Unbounded',sans-serif;font-size:13px;font-weight:600;color:var(--gd);margin-bottom:5px;}
+  .section-desc{font-size:12.5px;color:var(--txs);margin-bottom:18px;line-height:1.6;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+  @media(max-width:600px){.form-grid,.form-grid-3{grid-template-columns:1fr;}}
+  .field-group{display:flex;flex-direction:column;gap:5px;}
+  .field-group label{font-size:11px;font-weight:500;color:var(--txm);text-transform:uppercase;letter-spacing:.05em;}
+  .field-group select,.field-group input[type="number"],.field-group input[type="text"]{font-family:'Geologica',sans-serif;font-size:13.5px;padding:9px 12px;border:1.5px solid var(--brd);border-radius:8px;background:var(--bg);color:var(--txt);transition:border-color .2s;outline:none;}
+  .field-group select:focus,.field-group input:focus{border-color:var(--gl);background:white;}
+  .hint{font-size:11.5px;color:var(--txs);line-height:1.5;background:var(--gf);border-left:3px solid var(--gp);padding:8px 12px;border-radius:0 6px 6px 0;margin-top:10px;}
+  .hint strong{color:var(--gm);}
+  .result-block{background:var(--gf);border:1px solid var(--gp);border-radius:10px;padding:18px 22px;margin-top:18px;}
+  .result-block.hidden{display:none;}
+  .result-block-title{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--gm);margin-bottom:12px;}
+  .result-row{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px dashed var(--gp);gap:14px;}
+  .result-row:last-child{border-bottom:none;}
+  .result-label{font-size:12.5px;color:var(--txm);flex:1;}
+  .result-label .formula{display:block;font-size:10.5px;color:var(--txs);font-family:monospace;margin-top:2px;}
+  .result-val{font-size:14px;font-weight:600;color:var(--gd);white-space:nowrap;}
+  .result-val.big{font-family:'Unbounded',sans-serif;font-size:16px;color:var(--gm);}
+  .result-val.warn{color:var(--org);}
+  .result-val.eco{color:#1a5a8a;}
+  .result-table{width:100%;border-collapse:collapse;margin-top:14px;font-size:12px;}
+  .result-table th{background:var(--gd);color:white;padding:8px 10px;text-align:left;font-weight:500;font-size:11px;}
+  .result-table th:first-child{border-radius:6px 0 0 0;}
+  .result-table th:last-child{border-radius:0 6px 0 0;}
+  .result-table td{padding:7px 10px;border-bottom:1px solid var(--gp);color:var(--txt);}
+  .result-table tr:last-child td{border-bottom:none;}
+  .result-table tr:nth-child(even) td{background:var(--gf);}
+  .result-table .total-row td{background:var(--goldl);font-weight:600;color:var(--gd);border-top:2px solid var(--gold);}
+  .result-table .eco-row td{background:#dbeeff;font-weight:600;color:#1a5a8a;border-top:2px solid #5a9ad4;}
+  .btn-row{display:flex;gap:10px;margin-top:20px;align-items:center;flex-wrap:wrap;}
+  .btn-calc{font-family:'Geologica',sans-serif;font-size:12.5px;font-weight:600;padding:10px 20px;background:var(--gm);color:white;border:none;border-radius:8px;cursor:pointer;transition:background .2s;}
+  .btn-calc:hover{background:var(--gd);}
+  .btn-next{font-family:'Geologica',sans-serif;font-size:12.5px;font-weight:600;padding:10px 20px;background:var(--gd);color:white;border:none;border-radius:8px;cursor:pointer;}
+  .btn-next:hover{background:var(--gm);}
+  .btn-next.hidden{display:none;}
+  .btn-export{font-family:'Geologica',sans-serif;font-size:12.5px;padding:10px 18px;background:var(--gold);color:var(--gd);border:none;border-radius:8px;cursor:pointer;font-weight:600;}
+  .badge-valid{display:inline-block;background:#e8f5e9;color:#2d6a35;font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:20px;margin-left:6px;}
+  .badge-warn{display:inline-block;background:#fff3cd;color:#856404;font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:20px;margin-left:6px;}
+  .summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;}
+  @media(max-width:600px){.summary-grid{grid-template-columns:1fr;}}
+  .summary-card{border:1px solid var(--brd);border-radius:10px;padding:14px 18px;background:white;}
+  .summary-card-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--txs);margin-bottom:8px;}
+  .eco-block{background:#eef6ff;border:1px solid #b3d4f0;border-radius:10px;padding:18px 22px;margin-top:18px;}
+  .eco-block .result-block-title{color:#1a5a8a;}
+  @media print{.steps-nav,.btn-row{display:none!important;}.section-card.hidden{display:block!important;}body{background:white;}}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-inner">
+    <div class="header-tag">Плодівництво · БНАУ · 2025</div>
+    <h1>Проєкт закладання промислового саду</h1>
+    <p>Покроковий розрахунок індивідуального завдання — таблиці 1–5 + економіка</p>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+</div>
+
+<div class="main">
+<div class="steps-nav">
+  <button class="step-btn active" onclick="goStep(1)" id="stepBtn1"><span class="step-num">1</span> Вихідні дані</button>
+  <button class="step-btn" onclick="goStep(2)" id="stepBtn2"><span class="step-num">2</span> Квартали</button>
+  <button class="step-btn" onclick="goStep(3)" id="stepBtn3"><span class="step-num">3</span> Лісосмуги</button>
+  <button class="step-btn" onclick="goStep(4)" id="stepBtn4"><span class="step-num">4</span> Саджанці</button>
+  <button class="step-btn" onclick="goStep(5)" id="stepBtn5"><span class="step-num">5</span> Шпалера</button>
+  <button class="step-btn" onclick="goStep(6)" id="stepBtn6"><span class="step-num">6</span> Баланс</button>
+  <button class="step-btn" onclick="goStep(7)" id="stepBtn7"><span class="step-num">7</span> Бджоли/Зрошення</button>
+  <button class="step-btn" onclick="goStep(8)" id="stepBtn8"><span class="step-num">8</span> Врожайність</button>
+  <button class="step-btn" onclick="goStep(9)" id="stepBtn9"><span class="step-num">9</span> Кошторис</button>
+  <button class="step-btn" onclick="goStep(10)" id="stepBtn10"><span class="step-num">★</span> Підсумок</button>
+</div>
+
+<!-- STEP 1 -->
+<div class="section-card" id="step1">
+  <div class="section-title">Крок 1. Вихідні дані індивідуального завдання</div>
+  <div class="section-desc">Введіть параметри вашого варіанту. Всі подальші розрахунки виконуються автоматично.</div>
+  <div class="form-grid">
+    <div class="field-group"><label>Прізвище та ім'я</label><input type="text" id="student_name" placeholder="Іваненко Іван"></div>
+    <div class="field-group"><label>Група</label><input type="text" id="student_group" placeholder="АГ-21"></div>
+    <div class="field-group"><label>Зона вирощування</label>
+      <select id="zone"><option>Лісостеп</option><option>Степ</option><option>Полісся</option></select></div>
+    <div class="field-group"><label>Порода</label>
+      <select id="breed" onchange="updatePlanting()">
+        <option>Яблуня</option><option>Груша</option><option>Вишня</option>
+        <option>Черешня</option><option>Слива</option><option>Абрикос</option><option>Персик</option>
+      </select></div>
+    <div class="field-group"><label>Підщепа (сила росту)</label>
+      <select id="rootstock" onchange="updatePlanting()">
+        <option value="сильноросла">Сильноросла (насіннєва)</option>
+        <option value="середньоросла">Середньоросла (клонова)</option>
+        <option value="слаборосла">Слаборосла (карликова)</option>
+      </select></div>
+    <div class="field-group"><label>Загальна площа саду, га</label>
+      <input type="number" id="total_area" value="54" min="10" max="200"></div>
+    <div class="field-group"><label>Кількість кварталів</label>
+      <input type="number" id="num_quarters" value="6" min="2" max="20" step="2"></div>
+    <div class="field-group"><label>Ряди садозахисної смуги</label>
+      <select id="shelter_rows"><option value="3">3 ряди (2 дерева + 1 кущ)</option><option value="2">2 ряди</option><option value="5">5 рядів</option></select></div>
+  </div>
+  <div class="hint" id="planting_hint">Оберіть породу і підщепу — схема садіння підставиться автоматично.</div>
+  <div class="form-grid" style="margin-top:14px">
+    <div class="field-group"><label>Схема садіння — міжряддя, м</label>
+      <input type="number" id="row_spacing" value="4" min="2" max="12" step="0.5"></div>
+    <div class="field-group"><label>Схема садіння — в ряду, м</label>
+      <input type="number" id="tree_spacing" value="2.5" min="1" max="8" step="0.5"></div>
+  </div>
+
+  <!-- Таблиця підщеп -->
+  <div style="margin-top:18px">
+    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--txs);margin-bottom:8px;">Довідник: рекомендовані схеми садіння (Таблиця 2)</div>
+    <table class="result-table">
+      <thead><tr><th>Порода</th><th>Підщепа</th><th>Міжряддя, м</th><th>В ряду, м</th><th>Дерев/га</th></tr></thead>
+      <tbody>
+        <tr><td>Яблуня</td><td>Насіннєва (сильноросла)</td><td>8</td><td>5</td><td>250</td></tr>
+        <tr><td>Яблуня</td><td>Клонова середньоросла</td><td>6</td><td>4</td><td>417</td></tr>
+        <tr><td>Яблуня</td><td>Клонова слаборосла (карликова)</td><td>4</td><td>2.5</td><td>1000</td></tr>
+        <tr><td>Груша</td><td>Насіннєва (сильноросла)</td><td>7</td><td>5</td><td>286</td></tr>
+        <tr><td>Груша</td><td>Клонова (айва)</td><td>5</td><td>3</td><td>667</td></tr>
+        <tr><td>Вишня</td><td>Насіннєва</td><td>6</td><td>4</td><td>417</td></tr>
+        <tr><td>Черешня</td><td>Насіннєва</td><td>7</td><td>5</td><td>286</td></tr>
+        <tr><td>Черешня</td><td>Клонова (Гізела 5)</td><td>4</td><td>2</td><td>1250</td></tr>
+        <tr><td>Слива / Абрикос</td><td>Насіннєва</td><td>6</td><td>4</td><td>417</td></tr>
+        <tr><td>Персик</td><td>Насіннєва</td><td>6</td><td>4</td><td>417</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="btn-row"><button class="btn-next" onclick="goStep(2)">Далі → Квартали</button></div>
+</div>
+
+<!-- STEP 2 -->
+<div class="section-card hidden" id="step2">
+  <div class="section-title">Крок 2. Розмір кварталів</div>
+  <div class="section-desc">Оптимальна площа кварталу для зерняткових на слаборослих підщепах — 8–10 га, на сильнорослих — 15–20 га.</div>
+  <div class="form-grid">
+    <div class="field-group"><label>Умовна ширина кварталу, м</label><input type="number" id="q_width" value="250"></div>
+    <div class="field-group"><label>Умовна довжина кварталу, м</label><input type="number" id="q_length" value="450"></div>
+    <div class="field-group"><label>Ширина міжквартальної дороги, м</label><input type="number" id="road_inter" value="6"></div>
+    <div class="field-group"><label>Ширина магістральної дороги, м</label><input type="number" id="road_main" value="10"></div>
+    <div class="field-group"><label>Ширина розворотної смуги, м</label><input type="number" id="turn_strip" value="12"></div>
+    <div class="field-group"><label>Тіньовитривала смуга, м</label><input type="number" id="shadow_strip" value="8"></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn-calc" onclick="calcQuarters()">Розрахувати</button>
+    <button class="btn-next hidden" id="nextBtn2" onclick="goStep(3)">Далі → Лісосмуги</button>
+  </div>
+  <div class="result-block hidden" id="result2"><div id="result2_content"></div></div>
+</div>
+
+<!-- STEP 3 -->
+<div class="section-card hidden" id="step3">
+  <div class="section-title">Крок 3. Садозахисні насадження (Таблиця 1)</div>
+  <div class="section-desc">Розраховуємо потребу в садивному матеріалі для лісосмуг — окружних та вітроламних ліній.</div>
+  <div class="form-grid">
+    <div class="field-group"><label>Відстань між деревами (окружна), м</label><input type="number" id="shelter_tree_dist" value="2.5" step="0.5"></div>
+    <div class="field-group"><label>Відстань між кущами, м</label><input type="number" id="shelter_shrub_dist" value="0.5" step="0.1"></div>
+    <div class="field-group"><label>Відстань між деревами (вітроламна), м</label><input type="number" id="windbreak_dist" value="2" step="0.5"></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn-calc" onclick="calcShelter()">Розрахувати</button>
+    <button class="btn-next hidden" id="nextBtn3" onclick="goStep(4)">Далі → Саджанці</button>
+  </div>
+  <div class="result-block hidden" id="result3"><div id="result3_content"></div></div>
+</div>
+
+<!-- STEP 4 -->
+<div class="section-card hidden" id="step4">
+  <div class="section-title">Крок 4. Потреба в саджанцях</div>
+  <div class="section-desc">На основі фактичних розмірів кварталів розраховуємо кількість дерев на весь сад.</div>
+  <div class="form-grid">
+    <div class="field-group"><label>Кількість сортів у кварталі</label><input type="number" id="num_sorts" value="3" min="2" max="6"></div>
+    <div class="field-group"><label>Запас на випадання, %</label><input type="number" id="reserve_pct" value="5" min="2" max="10"></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn-calc" onclick="calcSeedlings()">Розрахувати</button>
+    <button class="btn-next hidden" id="nextBtn4" onclick="goStep(5)">Далі → Шпалера</button>
+  </div>
+  <div class="result-block hidden" id="result4"><div id="result4_content"></div></div>
+</div>
+
+<!-- STEP 5 -->
+<div class="section-card hidden" id="step5">
+  <div class="section-title">Крок 5. Матеріали для шпалери</div>
+  <div class="section-desc">Розраховується для слаборослих підщеп. Визначаємо кількість стовпів та дроту.</div>
+  <div class="form-grid">
+    <div class="field-group"><label>Відстань між проміжними стовпами, м</label><input type="number" id="pole_dist" value="20"></div>
+    <div class="field-group"><label>Кількість рядів дроту</label>
+      <select id="wire_rows"><option value="2">2 ряди</option><option value="3">3 ряди</option><option value="1">1 ряд</option></select></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn-calc" onclick="calcTrellis()">Розрахувати</button>
+    <button class="btn-next hidden" id="nextBtn5" onclick="goStep(6)">Далі → Баланс</button>
+  </div>
+  <div class="result-block hidden" id="result5"><div id="result5_content"></div></div>
+</div>
+
+<!-- STEP 6 -->
+<div class="section-card hidden" id="step6">
+  <div class="section-title">Крок 6. Баланс території саду (Таблиця 5)</div>
+  <div class="section-desc">Непродуктивна площа не повинна перевищувати 12–15% від загальної площі.</div>
+  <div class="btn-row">
+    <button class="btn-calc" onclick="calcBalance()">Розрахувати</button>
+    <button class="btn-next hidden" id="nextBtn6" onclick="goStep(7)">Далі → Бджоли/Зрошення</button>
+  </div>
+  <div class="result-block hidden" id="result6"><div id="result6_content"></div></div>
+</div>
+
+<!-- STEP 7: Бджоли + Зрошення -->
+<div class="section-card hidden" id="step7">
+  <div class="section-title">Крок 7. Потреба в бджолосім'ях та зрошенні</div>
+  <div class="section-desc">Розрахунок запилення і потреби у воді для зрошення саду.</div>
+
+  <div style="font-weight:500;font-size:13px;color:var(--gd);margin-bottom:12px;">🐝 Запилення</div>
+  <div class="form-grid">
+    <div class="field-group"><label>Норма бджолосімей на 1 га</label>
+      <select id="bee_norm">
+        <option value="1.5">1.5 сім'ї/га (мінімум)</option>
+        <option value="2" selected>2.0 сім'ї/га (рекомендовано)</option>
+        <option value="2.5">2.5 сім'ї/га (інтенсив)</option>
+      </select></div>
+    <div class="field-group"><label>Відстань між групами вуликів, м</label><input type="number" id="bee_group_dist" value="400"></div>
+  </div>
+  <div class="hint">За методичними вказівками: 1,5–2,0 бджолосім'ї на 1 га. Вулики розставляють групами по 5–10 штук через кожні 400–500 м перед початком цвітіння.</div>
+
+  <div style="font-weight:500;font-size:13px;color:var(--gd);margin-top:18px;margin-bottom:12px;">💧 Зрошення</div>
+  <div class="form-grid">
+    <div class="field-group"><label>Норма зрошення, м³/га за сезон</label>
+      <select id="irr_norm">
+        <option value="1200">1200 м³/га — Лісостеп</option>
+        <option value="2000">2000 м³/га — Степ</option>
+        <option value="800">800 м³/га — Полісся</option>
+        <option value="0">Без зрошення</option>
+      </select></div>
+    <div class="field-group"><label>Кількість поливів за сезон</label><input type="number" id="irr_count" value="8" min="1" max="30"></div>
+    <div class="field-group"><label>Норма одного поливу, м³/га</label><input type="number" id="irr_single" value="150" min="50" max="500"></div>
+    <div class="field-group"><label>Вартість 1 м³ води, грн</label><input type="number" id="irr_price" value="8" min="1" max="50" step="0.5"></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-calc" onclick="calcBeeIrr()">Розрахувати</button>
+    <button class="btn-next hidden" id="nextBtn7" onclick="goStep(8)">Далі → Врожайність</button>
+  </div>
+  <div class="result-block hidden" id="result7"><div id="result7_content"></div></div>
+</div>
+
+<!-- STEP 8: Врожайність і виручка -->
+<div class="section-card hidden" id="step8">
+  <div class="section-title">Крок 8. Планова врожайність і виручка від реалізації</div>
+  <div class="section-desc">Розраховуємо очікуваний валовий збір і дохід від реалізації продукції.</div>
+  <div class="form-grid">
+    <div class="field-group"><label>Планова врожайність, т/га</label>
+      <select id="yield_tha" onchange="document.getElementById('yield_custom').style.display=this.value=='custom'?'block':'none'">
+        <option value="20">20 т/га — мінімум інтенсивного саду</option>
+        <option value="30" selected>30 т/га — середня</option>
+        <option value="40">40 т/га — висока</option>
+        <option value="50">50 т/га — дуже висока (карликові)</option>
+        <option value="custom">Ввести вручну</option>
+      </select></div>
+    <div class="field-group" id="yield_custom" style="display:none"><label>Власне значення, т/га</label><input type="number" id="yield_val" value="30" min="5" max="100"></div>
+    <div class="field-group"><label>Ціна реалізації, грн/кг</label><input type="number" id="price_kg" value="18" min="1" max="200" step="0.5"></div>
+    <div class="field-group"><label>Частка товарної продукції, %</label><input type="number" id="market_pct" value="85" min="50" max="100"></div>
+    <div class="field-group"><label>Рік початку плодоношення</label><input type="number" id="bearing_year" value="3" min="1" max="10"></div>
+    <div class="field-group"><label>Рік повного плодоношення</label><input type="number" id="full_year" value="6" min="3" max="15"></div>
+  </div>
+  <div class="hint">Для інтенсивних садів на слаборослих підщепах урожай ≥20 т/га. Перший промисловий урожай — на 3–4 рік після садіння, повне плодоношення — на 5–7 рік.</div>
+  <div class="btn-row">
+    <button class="btn-calc" onclick="calcYield()">Розрахувати</button>
+    <button class="btn-next hidden" id="nextBtn8" onclick="goStep(9)">Далі → Кошторис</button>
+  </div>
+  <div class="result-block hidden" id="result8"><div id="result8_content"></div></div>
+</div>
+
+<!-- STEP 9: Кошторис -->
+<div class="section-card hidden" id="step9">
+  <div class="section-title">Крок 9. Кошторис витрат на закладання саду</div>
+  <div class="section-desc">Розраховуємо загальну вартість закладання саду та термін окупності інвестицій.</div>
+  <div class="form-grid">
+    <div class="field-group"><label>Вартість 1 саджанця, грн</label><input type="number" id="price_seedling" value="180" min="10" max="2000"></div>
+    <div class="field-group"><label>Вартість садіння 1 дерева (робота), грн</label><input type="number" id="price_planting" value="25" min="5" max="200"></div>
+    <div class="field-group"><label>Вартість 1 опори (стовп), грн</label><input type="number" id="price_pole" value="120" min="20" max="1000"></div>
+    <div class="field-group"><label>Вартість дроту, грн/кг</label><input type="number" id="price_wire" value="55" min="10" max="300"></div>
+    <div class="field-group"><label>Підготовка ґрунту (оранка+добрива), грн/га</label><input type="number" id="price_soil" value="25000" min="1000" max="200000"></div>
+    <div class="field-group"><label>Краплинне зрошення (монтаж), грн/га</label><input type="number" id="price_drip" value="80000" min="0" max="500000"></div>
+    <div class="field-group"><label>Огорожа (сітка), грн/пог.м</label><input type="number" id="price_fence" value="120" min="10" max="1000"></div>
+    <div class="field-group"><label>Вартість саджанців лісосмуг, грн/шт</label><input type="number" id="price_shelter_seed" value="40" min="5" max="500"></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn-calc" onclick="calcBudget()">Розрахувати кошторис</button>
+    <button class="btn-next hidden" id="nextBtn9" onclick="goStep(10)">Далі → Підсумок</button>
+  </div>
+  <div class="result-block hidden" id="result9"><div id="result9_content"></div></div>
+</div>
+
+<!-- STEP 10: Підсумок -->
+<div class="section-card hidden" id="step10">
+  <div class="section-title">Підсумковий звіт — Проєкт закладання саду</div>
+  <div class="section-desc">Для здачі роботи: натисніть «Зберегти як PDF» (Ctrl+P → Зберегти як PDF) або «Копіювати результати».</div>
+  <div id="final_summary"><div style="text-align:center;padding:32px;color:var(--txs)">Виконайте всі попередні кроки</div></div>
+  <div class="btn-row">
+    <button class="btn-export" onclick="window.print()">📄 Зберегти як PDF</button>
+    <button class="btn-export" style="background:var(--gm);color:white" onclick="copyResults()">📋 Копіювати результати</button>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+const S={quarters:null,shelter:null,seedlings:null,trellis:null,balance:null,beeIrr:null,yieldData:null,budget:null};
+const PLANTING={'Яблуня':{'сильноросла':[8,5],'середньоросла':[6,4],'слаборосла':[4,2.5]},'Груша':{'сильноросла':[7,5],'середньоросла':[5,3],'слаборосла':[5,2]},'Вишня':{'сильноросла':[6,4],'середньоросла':[5,3],'слаборосла':[5,3]},'Черешня':{'сильноросла':[7,5],'середньоросла':[6,4],'слаборосла':[4,2]},'Слива':{'сильноросла':[6,4],'середньоросла':[6,4],'слаборосла':[6,4]},'Абрикос':{'сильноросла':[7,4],'середньоросла':[7,4],'слаборосла':[7,4]},'Персик':{'сильноросла':[6,4],'середньоросла':[5,3],'слаборосла':[5,3]}};
+
+function updatePlanting(){
+  const b=v('breed'),s=v('rootstock'),e=PLANTING[b]?.[s];
+  if(e){document.getElementById('row_spacing').value=e[0];document.getElementById('tree_spacing').value=e[1];
+  document.getElementById('planting_hint').innerHTML=`<strong>Рекомендовано для ${b} на ${s} підщепі:</strong> ${e[0]} м × ${e[1]} м (площа живлення ${e[0]*e[1]} м²). Можна змінити вручну.`;}
+}
+updatePlanting();
+
+function goStep(n){
+  for(let i=1;i<=10;i++){
+    const el=document.getElementById('step'+i);if(el)el.classList.toggle('hidden',i!==n);
+    const btn=document.getElementById('stepBtn'+i);if(!btn)continue;
+    btn.classList.remove('active','done');
+    if(i===n)btn.classList.add('active');
+    else if(i<n)btn.classList.add('done');
+  }
+  const pct=Math.round((n-1)/9*100);
+  document.getElementById('progressFill').style.width=Math.max(9,pct)+'%';
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(n===10)buildSummary();
+}
+
+function v(id){return document.getElementById(id).value;}
+function n(id){return +document.getElementById(id).value;}
+
+function showResult(id,html){
+  const el=document.getElementById(id);el.classList.remove('hidden');
+  document.getElementById(id+'_content').innerHTML=html;
+}
+
+// STEP 2
+function calcQuarters(){
+  const ta=n('total_area'),nq=n('num_quarters'),qW=n('q_width'),qL=n('q_length');
+  const ri=n('road_inter'),rm=n('road_main'),ts=n('turn_strip'),ss=n('shadow_strip');
+  const sr=n('shelter_rows'),rowM=n('row_spacing'),rowI=n('tree_spacing');
+  const sW=(sr-1)*3+2;
+  const fW1=qW-sW-(ri/2)-ss-(ri/2);
+  const fW2=qW-ri;
+  const fL=qL-sW-2*ts-2-(rm/2);
+  const rQ1=Math.floor(fW1/rowM)+1,rQ2=Math.floor(fW2/rowM)+1;
+  const tpr=Math.floor(fL/rowI)+1;
+  S.quarters={ta,nq,qW,qL,ri,rm,ts,ss,sr,rowM,rowI,fW1,fW2,fL,rQ1,rQ2,tpr,sW};
+  const html=`
+    <div class="result-row"><div class="result-label">Площа кварталу<span class="formula">${ta}÷${nq}</span></div><div class="result-val big">${(ta/nq).toFixed(1)} га</div></div>
+    <div class="result-row"><div class="result-label">Фактична ширина (прикрайній)<span class="formula">${qW}−${sW}−${ss}−${ri}=${fW1.toFixed(0)} м</span></div><div class="result-val">${fW1.toFixed(0)} м</div></div>
+    <div class="result-row"><div class="result-label">Фактична ширина (центральний)<span class="formula">${qW}−${ri}=${fW2.toFixed(0)} м</span></div><div class="result-val">${fW2.toFixed(0)} м</div></div>
+    <div class="result-row"><div class="result-label">Фактична довжина<span class="formula">${qL}−${sW}−2×${ts}−2−${rm/2}=${fL.toFixed(0)} м</span></div><div class="result-val">${fL.toFixed(0)} м</div></div>
+    <div class="result-row"><div class="result-label">Рядів у прикрайньому кварталі<span class="formula">${fW1.toFixed(0)}÷${rowM}+1</span></div><div class="result-val">${rQ1} рядів</div></div>
+    <div class="result-row"><div class="result-label">Рядів у центральному кварталі</div><div class="result-val">${rQ2} рядів</div></div>
+    <div class="result-row"><div class="result-label">Дерев у ряду<span class="formula">${fL.toFixed(0)}÷${rowI}+1</span></div><div class="result-val big">${tpr} дерев</div></div>`;
+  showResult('result2',html);document.getElementById('nextBtn2').classList.remove('hidden');
+}
+
+// STEP 3
+function calcShelter(){
+  if(!S.quarters){alert('Спочатку крок 2');return;}
+  const q=S.quarters,tD=n('shelter_tree_dist'),sD=n('shelter_shrub_dist'),wD=n('windbreak_dist');
+  const bW=q.qW*(q.nq<=2?1:q.nq/2),bL=q.qL*2;
+  const perim=2*(bW+bL);
+  const shelterT=Math.ceil(perim*2/tD);
+  const shelterS=Math.ceil(perim/sD);
+  const wbLen=q.qL*(q.nq-1);
+  const wbT=Math.ceil(wbLen/wD);
+  S.shelter={perim,shelterT,shelterS,wbLen,wbT,bW,bL};
+  const html=`
+    <div class="result-row"><div class="result-label">Периметр масиву<span class="formula">2×(${bW.toFixed(0)}+${bL.toFixed(0)})</span></div><div class="result-val">${perim.toFixed(0)} м</div></div>
+    <table class="result-table" style="margin-top:10px">
+      <thead><tr><th>Тип</th><th>Порода</th><th>Довжина, м</th><th>Відстань, м</th><th>Саджанців, шт.</th></tr></thead>
+      <tbody>
+        <tr><td>Садозахисна смуга</td><td>Дерева (2 ряди)</td><td>${perim.toFixed(0)}</td><td>${tD}</td><td>${shelterT}</td></tr>
+        <tr><td>Садозахисна смуга</td><td>Кущі (1 ряд)</td><td>${perim.toFixed(0)}</td><td>${sD}</td><td>${shelterS}</td></tr>
+        <tr><td>Вітроламна лінія</td><td>Дерева (1 ряд)</td><td>${wbLen.toFixed(0)}</td><td>${wD}</td><td>${wbT}</td></tr>
+        <tr class="total-row"><td colspan="4">Разом для лісосмуг</td><td>${shelterT+shelterS+wbT} шт.</td></tr>
+      </tbody></table>`;
+  showResult('result3',html);document.getElementById('nextBtn3').classList.remove('hidden');
+}
+
+// STEP 4
+function calcSeedlings(){
+  if(!S.quarters){alert('Спочатку крок 2');return;}
+  const q=S.quarters,res=n('reserve_pct'),ns=n('num_sorts');
+  const bQ=2,cQ=q.nq-bQ;
+  const tpB=q.rQ1*q.tpr,tpC=q.rQ2*q.tpr;
+  const total=bQ*tpB+cQ*tpC;
+  const withRes=Math.ceil(total*(1+res/100));
+  const rps=Math.round(q.rQ2/ns),tps=rps*q.tpr*q.nq;
+  const breed=v('breed');
+  const isStone=['Вишня','Черешня','Слива','Абрикос','Персик'].includes(breed);
+  const distNote=isStone?'Ранні — 60%, Середні — 20%, Пізні — 20%':'Літні — 25%, Осінні — 25%, Зимові — 50%';
+  S.seedlings={total,withRes,tpB,tpC,bQ,cQ,rps,tps};
+  const html=`
+    <div class="result-row"><div class="result-label">Дерев у прикрайніх кварталах (${bQ}шт.)<span class="formula">${q.rQ1}×${q.tpr}×${bQ}</span></div><div class="result-val">${(bQ*tpB).toLocaleString('uk')} дер.</div></div>
+    <div class="result-row"><div class="result-label">Дерев у центральних кварталах (${cQ}шт.)<span class="formula">${q.rQ2}×${q.tpr}×${cQ}</span></div><div class="result-val">${(cQ*tpC).toLocaleString('uk')} дер.</div></div>
+    <div class="result-row"><div class="result-label">Загальна кількість дерев</div><div class="result-val big">${total.toLocaleString('uk')}</div></div>
+    <div class="result-row"><div class="result-label">З урахуванням запасу ${res}%</div><div class="result-val big">${withRes.toLocaleString('uk')} дерев</div></div>
+    <div class="result-row"><div class="result-label">Саджанців одного сорту<span class="formula">${rps} рядів×${q.tpr} дер.×${q.nq} кварт.</span></div><div class="result-val">${tps.toLocaleString('uk')} шт./сорт</div></div>
+    <div class="hint" style="margin-top:10px"><strong>Розподіл за строками достигання:</strong> ${distNote}</div>`;
+  showResult('result4',html);document.getElementById('nextBtn4').classList.remove('hidden');
+}
+
+// STEP 5
+function calcTrellis(){
+  if(!S.quarters){alert('Спочатку крок 2');return;}
+  const q=S.quarters,pd=n('pole_dist'),wr=n('wire_rows'),stock=v('rootstock');
+  const WW=0.038;
+  if(stock!=='слаборосла'){
+    showResult('result5',`<div class="hint"><strong>Примітка:</strong> Шпалера — лише для слаборослих підщеп. Для вашого варіанту (${stock}) шпалера не передбачена.</div>`);
+    document.getElementById('nextBtn5').classList.remove('hidden');
+    S.trellis={noTrellis:true};return;
+  }
+  const bQ=2,cQ=q.nq-bQ;
+  const ppB=Math.ceil(q.fL/pd),ppC=Math.ceil(q.fL/pd);
+  const intB=ppB*q.rQ1*bQ,intC=ppC*q.rQ2*cQ;
+  const totInt=intB+intC;
+  const totBrace=2*(q.rQ1*bQ+q.rQ2*cQ);
+  const wireLen=(q.fL*q.rQ1*bQ+q.fL*q.rQ2*cQ)*wr;
+  const wireKg=wireLen*WW;
+  S.trellis={totInt,totBrace,wireLen,wireKg};
+  const html=`
+    <div class="result-row"><div class="result-label">Проміжних стовпів (прикрайні)<span class="formula">${ppB}×${q.rQ1}×${bQ}</span></div><div class="result-val">${intB.toLocaleString('uk')} шт.</div></div>
+    <div class="result-row"><div class="result-label">Проміжних стовпів (центральні)<span class="formula">${ppC}×${q.rQ2}×${cQ}</span></div><div class="result-val">${intC.toLocaleString('uk')} шт.</div></div>
+    <div class="result-row"><div class="result-label">Усього проміжних стовпів</div><div class="result-val big">${totInt.toLocaleString('uk')} шт.</div></div>
+    <div class="result-row"><div class="result-label">Кінцевих стовпів з розкосами</div><div class="result-val">${totBrace.toLocaleString('uk')} шт.</div></div>
+    <div class="result-row"><div class="result-label">Загальна довжина дроту (${wr} ряди)</div><div class="result-val">${(wireLen/1000).toFixed(1)} км</div></div>
+    <div class="result-row"><div class="result-label">Маса дроту<span class="formula">${wireLen.toLocaleString('uk')} м × 0,038 кг/м</span></div><div class="result-val big">${(wireKg/1000).toFixed(2)} т</div></div>`;
+  showResult('result5',html);document.getElementById('nextBtn5').classList.remove('hidden');
+}
+
+// STEP 6
+function calcBalance(){
+  if(!S.quarters||!S.shelter){alert('Спочатку кроки 2 і 3');return;}
+  const q=S.quarters;
+  const useful=((2*q.fW1*q.fL+( q.nq-2)*q.fW2*q.fL)/10000);
+  const shelterA=(2*(S.shelter.bW+S.shelter.bL)*q.sW)/10000;
+  const wbA=S.shelter.wbLen*3/10000;
+  const roadsA=(S.shelter.bW*q.rm+(q.nq-1)*q.qL*q.ri)/10000;
+  const turnA=(2*S.shelter.bW*q.ts)/10000;
+  const farmA=q.ta*0.03;
+  const nonprod=((q.ta-useful)/q.ta*100);
+  S.balance={useful,shelterA,wbA,roadsA,turnA,farmA,nonprod};
+  const badge=nonprod<=15?'<span class="badge-valid">✓ норма</span>':'<span class="badge-warn">⚠ перевищення</span>';
+  const html=`
+    <table class="result-table">
+      <thead><tr><th>Елемент</th><th>Площа, га</th><th>Частка, %</th></tr></thead>
+      <tbody>
+        <tr><td>Корисна площа під насадженнями</td><td>${useful.toFixed(2)}</td><td>${(useful/q.ta*100).toFixed(1)}</td></tr>
+        <tr><td>Садозахисні смуги (окружні)</td><td>${shelterA.toFixed(2)}</td><td>${(shelterA/q.ta*100).toFixed(1)}</td></tr>
+        <tr><td>Вітроламні лінії</td><td>${wbA.toFixed(2)}</td><td>${(wbA/q.ta*100).toFixed(1)}</td></tr>
+        <tr><td>Дороги та розворотні смуги</td><td>${(roadsA+turnA).toFixed(2)}</td><td>${((roadsA+turnA)/q.ta*100).toFixed(1)}</td></tr>
+        <tr><td>Господарський двір</td><td>${farmA.toFixed(2)}</td><td>${(farmA/q.ta*100).toFixed(1)}</td></tr>
+        <tr class="total-row"><td>ЗАГАЛЬНА ПЛОЩА</td><td>${q.ta}</td><td>100</td></tr>
+      </tbody></table>
+    <div class="result-row" style="margin-top:10px"><div class="result-label">Непродуктивна площа ${badge}</div><div class="result-val ${nonprod>15?'warn':''}">${nonprod.toFixed(1)}%</div></div>`;
+  showResult('result6',html);document.getElementById('nextBtn6').classList.remove('hidden');
+}
+
+// STEP 7: Бджоли + Зрошення
+function calcBeeIrr(){
+  const ta=n('total_area');
+  const beeN=+v('bee_norm'),bgD=n('bee_group_dist');
+  const beeTotal=Math.ceil(ta*beeN);
+  const beeGroups=Math.ceil(beeTotal/7); // по 7 середнє
+  const groupsInSad=Math.ceil(ta*10000/bgD/bgD); // спрощено
+
+  const irrNorm=n('irr_norm'),irrCnt=n('irr_count'),irrSingle=n('irr_single'),irrPrice=n('irr_price');
+  const irrTotal=irrCnt*irrSingle; // м³/га
+  const irrTotalAll=irrTotal*ta;
+  const irrCost=irrTotalAll*irrPrice;
+
+  S.beeIrr={beeTotal,beeGroups,irrTotal,irrTotalAll,irrCost,irrPrice};
+
+  const html=`
+    <div style="font-weight:600;font-size:12px;color:var(--gd);margin-bottom:8px;">🐝 ЗАПИЛЕННЯ</div>
+    <div class="result-row"><div class="result-label">Площа саду<span class="formula">з вихідних даних</span></div><div class="result-val">${ta} га</div></div>
+    <div class="result-row"><div class="result-label">Норма бджолосімей<span class="formula">${ta} га × ${beeN} сім./га</span></div><div class="result-val">${beeTotal} сімей</div></div>
+    <div class="result-row"><div class="result-label">Кількість груп вуликів (по 5–10 шт.)<span class="formula">Відстань між групами ${bgD} м</span></div><div class="result-val big">${beeGroups} груп</div></div>
+    <div class="hint" style="margin:10px 0">Вулики розставляють <strong>перед початком цвітіння</strong>. Льотки орієнтують на північ-схід і схід для раннього вильоту. У холодну погоду бджоли працюють в радіусі 200–300 м від вуликів.</div>
+    ${irrNorm>0?`
+    <div style="font-weight:600;font-size:12px;color:var(--gd);margin:14px 0 8px;">💧 ЗРОШЕННЯ</div>
+    <div class="result-row"><div class="result-label">Кількість поливів за сезон</div><div class="result-val">${irrCnt} поливів</div></div>
+    <div class="result-row"><div class="result-label">Норма одного поливу</div><div class="result-val">${irrSingle} м³/га</div></div>
+    <div class="result-row"><div class="result-label">Загальна норма зрошення на 1 га<span class="formula">${irrCnt}×${irrSingle}</span></div><div class="result-val">${irrTotal} м³/га</div></div>
+    <div class="result-row"><div class="result-label">Потреба у воді на весь сад<span class="formula">${irrTotal}×${ta} га</span></div><div class="result-val big">${irrTotalAll.toLocaleString('uk')} м³</div></div>
+    <div class="result-row"><div class="result-label">Вартість зрошення за сезон<span class="formula">${irrTotalAll.toLocaleString('uk')} м³×${irrPrice} грн</span></div><div class="result-val eco">${irrCost.toLocaleString('uk')} грн</div></div>`
+    :'<div class="hint">Зрошення не передбачено.</div>'}`;
+  showResult('result7',html);document.getElementById('nextBtn7').classList.remove('hidden');
+}
+
+// STEP 8: Врожайність
+function calcYield(){
+  const ta=n('total_area');
+  let yt=v('yield_tha')==='custom'?n('yield_val'):+v('yield_tha');
+  const prKg=n('price_kg'),mkt=n('market_pct')/100;
+  const byYear=n('bearing_year'),fullYear=n('full_year');
+
+  const grossT=yt*ta; // т загалом
+  const marketT=grossT*mkt;
+  const revenue=marketT*1000*prKg; // грн (т→кг)
+  const revenueM=revenue/1000000;
+
+  S.yieldData={yt,grossT,marketT,revenue,prKg,mkt,byYear,fullYear,ta};
+
+  // Таблиця по роках
+  let rows='';
+  for(let yr=byYear;yr<=fullYear+2;yr++){
+    const pct=yr<=byYear?0.2:yr>=fullYear?1.0:((yr-byYear)/(fullYear-byYear));
+    const y=(yt*pct).toFixed(1),g=(grossT*pct).toFixed(0),r=Math.round(grossT*pct*mkt*1000*prKg);
+    rows+=`<tr><td>${yr}-й рік</td><td>${(pct*100).toFixed(0)}%</td><td>${y} т/га</td><td>${Number(g).toLocaleString('uk')} т</td><td>${r.toLocaleString('uk')} грн</td></tr>`;
+  }
+
+  const html=`
+    <div class="result-row"><div class="result-label">Планова врожайність</div><div class="result-val big">${yt} т/га</div></div>
+    <div class="result-row"><div class="result-label">Валовий збір (повне плодоношення)<span class="formula">${yt} т/га × ${ta} га</span></div><div class="result-val big">${grossT.toLocaleString('uk')} т</div></div>
+    <div class="result-row"><div class="result-label">Товарна продукція (${mkt*100}%)</div><div class="result-val">${marketT.toLocaleString('uk')} т</div></div>
+    <div class="result-row"><div class="result-label">Виручка від реалізації (повний урожай)<span class="formula">${marketT.toLocaleString('uk')} т × 1000 × ${prKg} грн/кг</span></div><div class="result-val eco big">${revenueM.toFixed(2)} млн грн/рік</div></div>
+    <div style="margin-top:14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--txs)">Динаміка врожайності по роках</div>
+    <table class="result-table" style="margin-top:8px">
+      <thead><tr><th>Рік</th><th>% від max</th><th>Урожайність</th><th>Валовий збір</th><th>Виручка, грн</th></tr></thead>
+      <tbody>${rows}</tbody></table>`;
+  showResult('result8',html);document.getElementById('nextBtn8').classList.remove('hidden');
+}
+
+// STEP 9: Кошторис
+function calcBudget(){
+  if(!S.seedlings||!S.shelter){alert('Спочатку заповніть кроки 2–4');return;}
+  const q=S.quarters,sd=S.seedlings,sh=S.shelter;
+  const pSeed=n('price_seedling'),pPlant=n('price_planting'),pPole=n('price_pole');
+  const pWire=n('price_wire'),pSoil=n('price_soil'),pDrip=n('price_drip');
+  const pFence=n('price_fence'),pShSeed=n('price_shelter_seed');
+
+  const cSeedlings=sd.withRes*pSeed;
+  const cPlanting=sd.withRes*pPlant;
+  const cPoles=S.trellis&&!S.trellis.noTrellis?(S.trellis.totInt+S.trellis.totBrace)*pPole:0;
+  const cWire=S.trellis&&!S.trellis.noTrellis?S.trellis.wireKg*pWire:0;
+  const cSoil=q.ta*pSoil;
+  const cDrip=q.ta*pDrip;
+  const fenceLen=sh.perim;
+  const cFence=fenceLen*pFence;
+  const shelterSeeds=(sh.shelterT+sh.shelterS+sh.wbT);
+  const cShelterSeed=shelterSeeds*pShSeed;
+
+  const total=cSeedlings+cPlanting+cPoles+cWire+cSoil+cDrip+cFence+cShelterSeed;
+  const totalPerHa=total/q.ta;
+
+  S.budget={total,totalPerHa,cSeedlings,cPlanting,cPoles,cWire,cSoil,cDrip,cFence,cShelterSeed};
+
+  const payback=S.yieldData?Math.ceil(total/S.yieldData.revenue):null;
+
+  const fmt=x=>Math.round(x).toLocaleString('uk');
+  const html=`
+    <table class="result-table">
+      <thead><tr><th>Стаття витрат</th><th>Кількість / обсяг</th><th>Ціна, грн</th><th>Сума, грн</th></tr></thead>
+      <tbody>
+        <tr><td>Саджанці плодових</td><td>${sd.withRes.toLocaleString('uk')} шт.</td><td>${pSeed}/шт.</td><td>${fmt(cSeedlings)}</td></tr>
+        <tr><td>Садіння (ручна праця)</td><td>${sd.withRes.toLocaleString('uk')} шт.</td><td>${pPlant}/шт.</td><td>${fmt(cPlanting)}</td></tr>
+        <tr><td>Підготовка ґрунту та добрива</td><td>${q.ta} га</td><td>${pSoil}/га</td><td>${fmt(cSoil)}</td></tr>
+        ${cPoles>0?`<tr><td>Стовпи для шпалери</td><td>${(S.trellis.totInt+S.trellis.totBrace).toLocaleString('uk')} шт.</td><td>${pPole}/шт.</td><td>${fmt(cPoles)}</td></tr>`:''}
+        ${cWire>0?`<tr><td>Дріт шпалерний</td><td>${S.trellis.wireKg.toFixed(0)} кг</td><td>${pWire}/кг</td><td>${fmt(cWire)}</td></tr>`:''}
+        <tr><td>Краплинне зрошення (монтаж)</td><td>${q.ta} га</td><td>${pDrip}/га</td><td>${fmt(cDrip)}</td></tr>
+        <tr><td>Огорожа (сітка)</td><td>${fenceLen.toFixed(0)} пог.м</td><td>${pFence}/м</td><td>${fmt(cFence)}</td></tr>
+        <tr><td>Саджанці для лісосмуг</td><td>${shelterSeeds.toLocaleString('uk')} шт.</td><td>${pShSeed}/шт.</td><td>${fmt(cShelterSeed)}</td></tr>
+        <tr class="total-row"><td colspan="3"><strong>ЗАГАЛЬНА ВАРТІСТЬ ЗАКЛАДАННЯ</strong></td><td><strong>${fmt(total)} грн</strong></td></tr>
+        <tr class="eco-row"><td colspan="3">Витрати на 1 га</td><td>${fmt(totalPerHa)} грн/га</td></tr>
+        <tr class="eco-row"><td colspan="3">Витрати, млн грн</td><td>${(total/1000000).toFixed(2)} млн грн</td></tr>
+      </tbody></table>
+    ${payback?`<div class="result-row" style="margin-top:12px"><div class="result-label">Орієнтовний термін окупності<span class="formula">Загальні витрати ÷ річна виручка = ${fmt(total)} ÷ ${fmt(S.yieldData.revenue)}</span></div><div class="result-val eco big">${payback} років</div></div>`:'<div class="hint" style="margin-top:10px">Для розрахунку терміну окупності виконайте Крок 8 (врожайність).</div>'}`;
+  showResult('result9',html);document.getElementById('nextBtn9').classList.remove('hidden');
+}
+
+// ПІДСУМОК
+function buildSummary(){
+  const name=v('student_name')||'—',group=v('student_group')||'—';
+  const breed=v('breed'),zone=v('zone'),stock=v('rootstock'),area=v('total_area');
+  const rs=v('row_spacing'),ts=v('tree_spacing'),q=S.quarters;
+  let html=`
+  <div class="summary-grid">
+    <div class="summary-card"><div class="summary-card-title">Студент</div><div style="font-size:14px;font-weight:500">${name}</div><div style="font-size:12px;color:var(--txs)">Група ${group}</div></div>
+    <div class="summary-card"><div class="summary-card-title">Завдання</div><div>${breed}, ${zone}</div><div style="font-size:12px;color:var(--txs)">${stock} підщепа · ${area} га · ${rs}×${ts} м</div></div>
+  </div><div style="margin-top:18px">`;
+  if(q)html+=`<div class="result-block" style="margin-top:0"><div class="result-block-title">Квартали</div>
+    <div class="result-row"><div class="result-label">Кількість кварталів</div><div class="result-val">${q.nq} шт.</div></div>
+    <div class="result-row"><div class="result-label">Фактична ширина/довжина</div><div class="result-val">${q.fW1.toFixed(0)}/${q.fW2.toFixed(0)} × ${q.fL.toFixed(0)} м</div></div>
+    <div class="result-row"><div class="result-label">Рядів / дерев у ряду</div><div class="result-val big">${q.rQ1}/${q.rQ2} рядів · ${q.tpr} дер.</div></div></div>`;
+  if(S.shelter)html+=`<div class="result-block" style="margin-top:10px"><div class="result-block-title">Таблиця 1 — Лісосмуги</div>
+    <div class="result-row"><div class="result-label">Дерева садозахисної смуги</div><div class="result-val">${S.shelter.shelterT} шт.</div></div>
+    <div class="result-row"><div class="result-label">Кущі садозахисної смуги</div><div class="result-val">${S.shelter.shelterS} шт.</div></div>
+    <div class="result-row"><div class="result-label">Вітроламні лінії</div><div class="result-val">${S.shelter.wbT} шт.</div></div></div>`;
+  if(S.seedlings)html+=`<div class="result-block" style="margin-top:10px"><div class="result-block-title">Саджанці</div>
+    <div class="result-row"><div class="result-label">Загальна кількість дерев</div><div class="result-val big">${S.seedlings.total.toLocaleString('uk')}</div></div>
+    <div class="result-row"><div class="result-label">З урахуванням запасу</div><div class="result-val big">${S.seedlings.withRes.toLocaleString('uk')} дерев</div></div></div>`;
+  if(S.balance)html+=`<div class="result-block" style="margin-top:10px"><div class="result-block-title">Таблиця 5 — Баланс</div>
+    <div class="result-row"><div class="result-label">Корисна площа</div><div class="result-val">${S.balance.useful.toFixed(2)} га (${(S.balance.useful/+area*100).toFixed(1)}%)</div></div>
+    <div class="result-row"><div class="result-label">Непродуктивна площа</div><div class="result-val ${S.balance.nonprod>15?'warn':''}">${S.balance.nonprod.toFixed(1)}% ${S.balance.nonprod<=15?'<span class="badge-valid">✓</span>':'<span class="badge-warn">⚠</span>'}</div></div></div>`;
+  if(S.beeIrr)html+=`<div class="result-block" style="margin-top:10px"><div class="result-block-title">Бджоли та зрошення</div>
+    <div class="result-row"><div class="result-label">Потреба в бджолосім'ях</div><div class="result-val big">${S.beeIrr.beeTotal} сімей</div></div>
+    <div class="result-row"><div class="result-label">Кількість груп вуликів</div><div class="result-val">${S.beeIrr.beeGroups} груп</div></div>
+    ${S.beeIrr.irrTotalAll>0?`<div class="result-row"><div class="result-label">Потреба у воді за сезон</div><div class="result-val">${S.beeIrr.irrTotalAll.toLocaleString('uk')} м³</div></div>
+    <div class="result-row"><div class="result-label">Вартість зрошення</div><div class="result-val eco">${S.beeIrr.irrCost.toLocaleString('uk')} грн/рік</div></div>`:''}</div>`;
+  if(S.yieldData)html+=`<div class="eco-block" style="margin-top:10px"><div class="result-block-title">Економіка — врожайність</div>
+    <div class="result-row"><div class="result-label">Планова врожайність</div><div class="result-val big">${S.yieldData.yt} т/га</div></div>
+    <div class="result-row"><div class="result-label">Валовий збір</div><div class="result-val">${S.yieldData.grossT.toLocaleString('uk')} т</div></div>
+    <div class="result-row"><div class="result-label">Виручка від реалізації</div><div class="result-val eco big">${(S.yieldData.revenue/1000000).toFixed(2)} млн грн/рік</div></div></div>`;
+  if(S.budget)html+=`<div class="eco-block" style="margin-top:10px"><div class="result-block-title">Кошторис закладання</div>
+    <div class="result-row"><div class="result-label">Загальна вартість</div><div class="result-val eco big">${(S.budget.total/1000000).toFixed(2)} млн грн</div></div>
+    <div class="result-row"><div class="result-label">Витрати на 1 га</div><div class="result-val eco">${Math.round(S.budget.totalPerHa).toLocaleString('uk')} грн/га</div></div>
+    ${S.yieldData?`<div class="result-row"><div class="result-label">Термін окупності</div><div class="result-val eco big">${Math.ceil(S.budget.total/S.yieldData.revenue)} років</div></div>`:''}
+    </div>`;
+  html+='</div>';
+  document.getElementById('final_summary').innerHTML=html;
+}
+
+function copyResults(){
+  const name=v('student_name')||'—',group=v('student_group')||'—';
+  let txt=`ПРОЄКТ ЗАКЛАДАННЯ САДУ\nСтудент: ${name}, Група: ${group}\nПорода: ${v('breed')}, Зона: ${v('zone')}, Підщепа: ${v('rootstock')}, Площа: ${v('total_area')} га\n\n`;
+  if(S.quarters){const q=S.quarters;txt+=`КВАРТАЛИ:\nФакт. ширина: ${q.fW1.toFixed(0)}/${q.fW2.toFixed(0)} м, Довжина: ${q.fL.toFixed(0)} м\nРядів: ${q.rQ1}/${q.rQ2}, Дерев у ряду: ${q.tpr}\n\n`;}
+  if(S.shelter)txt+=`ЛІСОСМУГИ (Табл.1):\nДерева: ${S.shelter.shelterT} шт., Кущі: ${S.shelter.shelterS} шт., Вітроламна: ${S.shelter.wbT} шт.\n\n`;
+  if(S.seedlings)txt+=`САДЖАНЦІ:\nЗагалом: ${S.seedlings.total.toLocaleString('uk')}, З запасом: ${S.seedlings.withRes.toLocaleString('uk')}\n\n`;
+  if(S.balance)txt+=`БАЛАНС (Табл.5):\nКорисна площа: ${S.balance.useful.toFixed(2)} га, Непродуктивна: ${S.balance.nonprod.toFixed(1)}%\n\n`;
+  if(S.beeIrr)txt+=`БДЖОЛИ/ЗРОШЕННЯ:\nБджолосімей: ${S.beeIrr.beeTotal}, Груп вуликів: ${S.beeIrr.beeGroups}\n${S.beeIrr.irrTotalAll>0?`Вода: ${S.beeIrr.irrTotalAll.toLocaleString('uk')} м³, Вартість зрошення: ${S.beeIrr.irrCost.toLocaleString('uk')} грн\n`:''}\n`;
+  if(S.yieldData)txt+=`ВРОЖАЙНІСТЬ:\nПланова: ${S.yieldData.yt} т/га, Валовий збір: ${S.yieldData.grossT.toLocaleString('uk')} т\nВиручка: ${(S.yieldData.revenue/1000000).toFixed(2)} млн грн/рік\n\n`;
+  if(S.budget)txt+=`КОШТОРИС:\nЗагальна вартість: ${(S.budget.total/1000000).toFixed(2)} млн грн\nВитрати/га: ${Math.round(S.budget.totalPerHa).toLocaleString('uk')} грн/га\n${S.yieldData?`Термін окупності: ${Math.ceil(S.budget.total/S.yieldData.revenue)} років`:''}`;
+  navigator.clipboard.writeText(txt).then(()=>alert('Результати скопійовано!'));
+}
+</script>
+</body>
+</html>
